@@ -25,6 +25,11 @@ import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spot.SuspiciousConnectsArgumentParser.SuspiciousConnectsConfig
 import org.apache.spot.proxy.ProxySchema._
 import org.apache.spot.utilities.data.validation.{InvalidDataHandler => dataValidation}
+//import scala.pickling._
+//import scala.pickling.Defaults._
+//import scala.pickling.json._
+import java.io._
+
 
 /**
   * Run suspicious connections analysis on proxy data.
@@ -90,7 +95,40 @@ object ProxySuspiciousConnectsAnalysis {
     logger.info("Fitting probabilistic model to data")
     val model = ProxySuspiciousConnectsModel.trainNewModel(sparkContext, sqlContext, logger, config, data)
     logger.info("Identifying outliers")
+//    val pckl = List(1, 2, 3, 4).pickle
+//    println(pckl)
+    val uuid = java.util.UUID.randomUUID.toString
+    val oos = new ObjectOutputStream(new FileOutputStream("/Users/prasanna/proxy_output/proxy_model_output_"+uuid))
+    oos.writeObject(model)
+    oos.close
+    //model.score(sparkContext, data)
+    val ois = new ObjectInputStream(new FileInputStream("/Users/prasanna/proxy_output/proxy_model_output_"+uuid))
+    val model2 = ois.readObject.asInstanceOf[ProxySuspiciousConnectsModel]
+    ois.close
+    val a = model.score(sparkContext, data)
+    val b = model2.score(sparkContext, data)
+    model2.score(sparkContext, data)
+  }
 
+  /**
+    * Predict anomalous proxy log entries in in the provided data frame using the trained model
+    *
+    * @param data Data frame of proxy entries
+    * @param config
+    * @param sparkContext
+    * @param sqlContext
+    * @param logger
+    * @return
+    */
+  def predictProxyAnomalies(data: DataFrame,
+                           config: SuspiciousConnectsConfig,
+                           sparkContext: SparkContext,
+                           sqlContext: SQLContext,
+                           logger: Logger): DataFrame = {
+
+    val ois2 = new ObjectInputStream(new FileInputStream("/Users/prasanna/proxy_output/proxy_model_output_6a802954-8b92-49d2-979b-6bcc57249fb3"))
+    val model = ois2.readObject.asInstanceOf[ProxySuspiciousConnectsModel]
+    ois2.close
     model.score(sparkContext, data)
   }
 

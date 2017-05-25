@@ -48,7 +48,7 @@ class ProxySuspiciousConnectsModel(topicCount: Int,
                                    wordToPerTopicProb: Map[String, Array[Double]],
                                    timeCuts: Array[Double],
                                    entropyCuts: Array[Double],
-                                   agentCuts: Array[Double]) {
+                                   agentCuts: Array[Double]) extends Serializable {
 
   /**
     * Calculate suspicious connection scores for an incoming dataframe using this proxy suspicious connects model.
@@ -94,7 +94,7 @@ class ProxySuspiciousConnectsModel(topicCount: Int,
 /**
   * Contains model creation and training routines.
   */
-object ProxySuspiciousConnectsModel {
+object ProxySuspiciousConnectsModel extends Serializable {
 
   /**
     * Factory for ProxySuspiciousConnectsModel.

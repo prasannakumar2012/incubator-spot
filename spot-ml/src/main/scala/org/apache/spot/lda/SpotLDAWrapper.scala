@@ -19,7 +19,7 @@ package org.apache.spot.lda
 
 import org.apache.log4j.Logger
 import org.apache.spark.SparkContext
-import org.apache.spark.mllib.clustering.{DistributedLDAModel, EMLDAOptimizer, LDA}
+import org.apache.spark.mllib.clustering.{DistributedLDAModel, EMLDAOptimizer, LDA, OnlineLDAOptimizer}
 import org.apache.spark.mllib.linalg.{Matrix, Vector, Vectors}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.functions._
@@ -89,6 +89,7 @@ object SpotLDAWrapper {
 
     //Instantiate optimizer based on input
     val optimizer = new EMLDAOptimizer
+   // val optimizer = new OnlineLDAOptimizer
 
     logger.info(s"Running Spark LDA with params alpha = $ldaAlpha beta = $ldaBeta " +
       s"Max iterations = $maxIterations Optimizer = em")

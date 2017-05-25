@@ -76,6 +76,20 @@ class ProxySuspiciousConnectsAnalysisTest extends TestingSparkContextFlatSpec wi
       "-",	"127.0.0.1",	338,	647,
       "maw.bronto.com/sites/c37i4q22szvir8ga3m8mtxaft7gwnm5fio8hfxo35mu81absi1/carts/4b3a313d-50f6-4117-8ffd-4e804fd354ef/fiddle")
 
+    val anomalousRecord2 = ProxyInput("2016-10-03",	"04:57:36", "127.0.0.1",	"intel.com",	"GET",
+      "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36",
+      "text/plain", 230,	"-", 	"Technology/Internet",	"http://www.spoonflower.com/tags/color",	"402",	80,
+      "/sites/c37i4q22szvir8ga3m8mtxaft7gwnm5fio8hfxo35mu81absi1/carts/4b3a313d-50f6-4117-8ffd-4e804fd354ef/fiddle",
+      "-",	"127.0.0.1",	338,	647,
+      "maw.bronto.com/sites/c37i4q22szvir8ga3m8mtxaft7gwnm5fio8hfxo35mu81absi1/carts/4b3a313d-50f6-4117-8ffd-4e804fd354ef/fiddle")
+
+    val anomalousRecord3 = ProxyInput("2016-10-03",	"04:57:36", "227.0.0.1",	"intel.com",	"PUT",
+      "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36",
+      "text/plain", 230,	"-", 	"Technology/Internet",	"http://www.spoonflower.com/tags/color",	"202",	80,
+      "/sites/c37i4q22szvir8ga3m8mtxaft7gwnm5fio8hfxo35mu81absi1/carts/4b3a313d-50f6-4117-8ffd-4e804fd354ef/fiddle",
+      "-",	"127.0.0.1",	338,	647,
+      "maw.bronto.com/sites/c37i4q22szvir8ga3m8mtxaft7gwnm5fio8hfxo35mu81absi1/carts/4b3a313d-50f6-4117-8ffd-4e804fd354ef/fiddle")
+
     val typicalRecord   = ProxyInput("2016-10-03",	"04:57:36", "127.0.0.1",	"maw.bronto.com",	"PUT",
       "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36",
       "text/plain", 230,	"-", 	"Technology/Internet",	"http://www.spoonflower.com/tags/color",	"202",	80,
@@ -84,15 +98,30 @@ class ProxySuspiciousConnectsAnalysisTest extends TestingSparkContextFlatSpec wi
       "maw.bronto.com/sites/c37i4q22szvir8ga3m8mtxaft7gwnm5fio8hfxo35mu81absi1/carts/4b3a313d-50f6-4117-8ffd-4e804fd354ef/fiddle")
 
 
-    val data = sqlContext.createDataFrame(Seq(anomalousRecord, typicalRecord, typicalRecord, typicalRecord, typicalRecord,
-      typicalRecord, typicalRecord, typicalRecord, typicalRecord, typicalRecord))
+//    val data = sqlContext.createDataFrame(Seq(anomalousRecord, typicalRecord, typicalRecord, typicalRecord, typicalRecord,
+//      typicalRecord, typicalRecord, typicalRecord, typicalRecord, typicalRecord))
+
+
+    val data = sqlContext.createDataFrame(Seq(anomalousRecord, anomalousRecord, anomalousRecord2, anomalousRecord3, typicalRecord, typicalRecord, typicalRecord, typicalRecord,
+      typicalRecord, typicalRecord, typicalRecord, typicalRecord, typicalRecord, typicalRecord))
+
 
     val scoredData = ProxySuspiciousConnectsAnalysis.detectProxyAnomalies(data, testConfigProxy,
       sparkContext,
       sqlContext,
       logger)
 
+//    val scoredData = ProxySuspiciousConnectsAnalysis.predictProxyAnomalies(data, testConfigProxy,
+//      sparkContext,
+//      sqlContext,
+//      logger)
 
+
+//    println(scoredData.rdd.collect())
+    scoredData.rdd.collect.foreach(println)
+    def uuid = java.util.UUID.randomUUID.toString
+    scoredData.rdd.coalesce(1).saveAsTextFile("/Users/prasanna/proxy_output/proxy_output_"+uuid)
+    scoredData.toJSON.coalesce(1).saveAsTextFile("/Users/prasanna/proxy_output/proxy_output_json_"+uuid)
 
     val anomalyScore = scoredData.filter(scoredData(Host) ===  "intel.com").first().getAs[Double](Score)
     val typicalScores = scoredData.filter(scoredData(Host) === "maw.bronto.com").collect().map(_.getAs[Double](Score))
